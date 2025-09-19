@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Hasil Ujian</title>
+</head>
+<body>
+  <h2>Hasil Ujian</h2>
+  <div id="hasil"></div>
+  <button onclick="exportFile('csv')">Export CSV</button>
+  <button onclick="exportFile('xlsx')">Export Excel</button>
+  <button onclick="exportFile('pdf')">Export PDF</button>
+
+<script>
+const urlParams=new URLSearchParams(location.search);
+const examId=urlParams.get("exam");
+const token=urlParams.get("token");
+
+async function load(){
+  const res = await fetch("/api/exams/"+examId+"/results",{headers:{"Authorization":"Bearer "+token}});
+  const data=await res.json();
+  const box=document.getElementById("hasil");
+  box.innerHTML="";
+  data.forEach(r=>{
+    const div=document.createElement("div");
+    div.textContent=`${r.name} (${r.email}) skor: ${r.score}/${r.total}`;
+    box.appendChild(div);
+  });
+}
+
+function exportFile(type){
+  location.href=`/api/exams/${examId}/export/${type}?token=${token}`;
+}
+
+load();
+</script>
+</body>
+</html>
