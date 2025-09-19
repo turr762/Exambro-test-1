@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Siswa - Multi Exambro</title>
+</head>
+<body>
+  <h2>Masuk Ujian</h2>
+  <input id="nama" placeholder="Nama">
+  <input id="email" placeholder="Email">
+  <input id="kelas" placeholder="Kelas">
+  <input id="kode" placeholder="Kode Ujian">
+  <button onclick="join()">Masuk</button>
+  <div id="soal"></div>
+
+<script>
+let attemptId="";
+
+async function join(){
+  const res = await fetch("/api/join",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      name:document.getElementById("nama").value,
+      email:document.getElementById("email").value,
+      class:document.getElementById("kelas").value,
+      code:document.getElementById("kode").value
+    })
+  });
+  const data = await res.json();
+  attemptId=data.attemptId;
+  loadSoal(data.examId);
+}
+
+async function loadSoal(examId){
+  const res = await fetch("/api/exams/"+examId+"/questions");
+  const q = await res.json();
+  const box=document.getElementById("soal");
+  box.innerHTML="";
+  q.forEach(s=>{
+    const div=document.createElement("div");
+    div.innerHTML=`<p>${s.text}</p>
+      <input placeholder="Jawaban" onchange="jawab(${s.id},this.value)">`;
+    box.appendChild(div);
+  });
+}
+
+async function jawab(qid,ans){
+  await fetch("/api/answer",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({attemptId,qid,ans})
+  });
+}
+</script>
+</body>
+</html>
