@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Guru - Multi Exambro</title>
+</head>
+<body>
+  <h2>Panel Guru</h2>
+  <div id="auth">
+    <h3>Login</h3>
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="loginGuru()">Login</button>
+    <h3>Register Guru Baru</h3>
+    <input id="newUser" placeholder="Username">
+    <input id="newPass" type="password" placeholder="Password">
+    <button onclick="registerGuru()">Register</button>
+  </div>
+  <div id="panel" style="display:none">
+    <h3>Buat Soal Baru</h3>
+    <input id="judul" placeholder="Judul ujian">
+    <button onclick="buatUjian()">Buat</button>
+    <div id="ujian"></div>
+  </div>
+
+<script>
+let token = "";
+
+async function registerGuru(){
+  const res = await fetch("/api/teacher/register",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username:document.getElementById("newUser").value,password:document.getElementById("newPass").value})
+  });
+  alert(await res.text());
+}
+
+async function loginGuru(){
+  const res = await fetch("/api/teacher/login",{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({username:document.getElementById("username").value,password:document.getElementById("password").value})
+  });
+  const data = await res.json();
+  if(data.token){
+    token=data.token;
+    document.getElementById("auth").style.display="none";
+    document.getElementById("panel").style.display="block";
+    loadUjian();
+  } else {
+    alert("Login gagal");
+  }
+}
+
+async function buatUjian(){
+  const res = await fetch("/api/exams",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+    body:JSON.stringify({title:document.getElementById("judul").value})
+  });
+  await loadUjian();
+}
+
+async function loadUjian(){
+  const res = await fetch("/api/exams",{headers:{"Authorization":"Bearer "+token}});
+  const data = await res.json();
+  document.getElementById("ujian").innerHTML="";
+  data.forEach(e=>{
+    const div=document.createElement("div");
+    div.innerHTML=`<b>${e.title}</b> (kode: ${e.code}) 
+      <button onclick="lihatHasil(${e.id})">Hasil</button>`;
+    document.getElementById("ujian").appendChild(div);
+  });
+}
+
+function lihatHasil(id){
+  window.location="/hasil?exam="+id+"&token="+token;
+}
+</script>
+</body>
+</html>
